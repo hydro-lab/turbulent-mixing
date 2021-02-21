@@ -67,10 +67,31 @@ hist(dat$snr1, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim =
 hist(dat$snr2, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 2", xlab = "", main = "")
 hist(dat$snr3, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 3", xlab = "Signal-to-Noise Ratio (dB)", main = "")
 
-datetime <- array(-9999, dim = c(nrow(sen),2)) # col 1: days (day 1 is 01 Jan 2020), col 2: seconds of the day
-u <- array(-9999, dim = c(nrow(sen),sampling_rate))
-v <- array(-9999, dim = c(nrow(sen),sampling_rate))
-w <- array(-9999, dim = c(nrow(sen),sampling_rate))
+# IF TIMES ARE NEEDED
+# datetime <- array(-9999, dim = c(nrow(sen),2)) # col 1: days (day 1 is 01 Jan 2020), col 2: seconds of the day
+# # loops through each second of the record and records the second to the sen variable
+# for (i in 1:nrow(sen)) {
+#       # datetime[i,1] is the number of days since 31 Dec 2019, i.e., 01 Jan 2020 is day 1
+#       datetime[i,1] <- ( as.numeric(as.Date(paste(sen$yea[i], sen$mon[i], sen$day[i], sep = " "), format = "%Y %m %d")) - as.numeric(as.Date("2019 12 31", format = "%Y %m %d")) )
+#       # datetime[i,2] is the number of seconds of that day.  Still in UTC.
+#       datetime[i,2] <- sen$sec[i] + (sen$mnt[i])*60 + (sen$hou[i])*3600
+# }
+# sen$days <- datetime[,1]
+# sen$secs <- datetime[,2]
+# rm(datetime)
+
+# ANALYSIS BY AVERAGING WINDOW:
+# bar is the averaging window for U_bar and to compute the deviations from the mean, easiest to express 
+# as a multiple of the sampling rate, therefore measured in seconds: bar_s.  Can take non-integer values.
+bar_s <- 3 # averaging window in seconds
+bar <- round(bar_s * sampling_rate) # round needed to ensure that it fits within the dataset
+# gives decimal time for each data record
+dat$time <- (c(1:nrow(dat)))/sampling_rate
+
+u <- array(NA, dim = c(ceiling(nrow(dat)/bar),bar))
+v <- u
+w <- v
+time <- array(-9999, dim = c(nrow(u)))
 u_ave <- array(0, dim = c(nrow(sen),2))
 v_ave <- array(0, dim = c(nrow(sen),2))
 w_ave <- array(0, dim = c(nrow(sen),2))
@@ -83,15 +104,10 @@ ww <- uu
 uv <- uu
 uw <- uu
 vw <- uu
-bar <- 3 * sampling_rate # this is the averaging window for U_bar and to compute the deviations from the mean, expressed as a multiple of the sampling rate.
-for (i in 1:nrow(sen)) {
-      # loops through each second of the record.
-      # datetime[i,1] is the number of days since 31 Dec 2019, i.e., 01 Jan 2020 is day 1
-      datetime[i,1] <- ( as.numeric(as.Date(paste(sen$yea[i], sen$mon[i], sen$day[i], sep = " "), format = "%Y %m %d")) - as.numeric(as.Date("2019 12 31", format = "%Y %m %d")) )
-      # datetime[i,2] is the number of seconds of that day.  Still in UTC.
-      datetime[i,2] <- sen$sec[i] + (sen$mnt[i])*60 + (sen$hou[i])*3600
-      for (j in 1:bar) { # this will cycle over the averaging window defined by "bar"
-            dat_index <- (bar*(i-1)) + j # this will not keep the timestamps...  START BACK HERE!!!!!
+for (i in 1:(nrow(u))) {
+      time[i] <- dat$time[((i)*bar)] # enters end time
+      for (j in 1:(ncol(u))) { # this will cycle over each second and write the decimal second
+            dat_index <- (bar*(i-1)) + j
             if (is.na(dat$u[dat_index])==FALSE) {
                   if (dat$checksum[dat_index]>0) {
                         print(paste0("error at ", dat$ensemble[dat_index]))
@@ -104,9 +120,9 @@ for (i in 1:nrow(sen)) {
                   w_ave[i,2] = w_ave[i,2] + 1
             }
       }
-      u_ave[i,1] <- mean(u[i,])
-      v_ave[i,1] <- mean(v[i,])
-      w_ave[i,1] <- mean(w[i,])
+      u_ave[i,1] <- mean(u[i,], na.rm = TRUE)
+      v_ave[i,1] <- mean(v[i,], na.rm = TRUE)
+      w_ave[i,1] <- mean(w[i,], na.rm = TRUE)
       if (u_ave[i,2]==sampling_rate) {
             for (j in 1:sampling_rate) {
                   u_prime[i,j] <- u[i,j] - u_ave[i,1]
