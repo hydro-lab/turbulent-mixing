@@ -7,7 +7,7 @@ library(dplyr)
 library(ggplot2)
 
 setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/")
-fh <- "chartiers1" # filename header
+fh <- "9MR-AB12" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
 sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
 sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
@@ -67,6 +67,11 @@ hist(dat$snr2, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim =
 hist(dat$snr3, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 3", xlab = "Signal-to-Noise Ratio (dB)", main = "")
 
 datetime <- array(-9999, dim = c(nrow(sen),2)) # col 1: days (day 1 is 01 Jan 2020), col 2: seconds of the day
+for (i in 1:nrow(sen)) {
+      datetime[i,1] <- ( as.numeric(as.Date(paste(sen$yea[i], sen$mon[i], sen$day[i], sep = " "), format = "%Y %m %d")) - as.numeric(as.Date("2019 12 31", format = "%Y %m %d")) )
+      datetime[i,2] <- sen$sec[i] + (sen$mnt[i])*60 + (sen$hou[i])*3600
+}
+
 u <- array(-9999, dim = c(nrow(sen),sampling_rate))
 v <- array(-9999, dim = c(nrow(sen),sampling_rate))
 w <- array(-9999, dim = c(nrow(sen),sampling_rate))
@@ -83,8 +88,6 @@ uv <- uu
 uw <- uu
 vw <- uu
 for (i in 1:nrow(sen)) {
-      datetime[i,1] <- ( as.numeric(as.Date(paste(sen$yea[i], sen$mon[i], sen$day[i], sep = " "), format = "%Y %m %d")) - as.numeric(as.Date("2019 12 31", format = "%Y %m %d")) )
-      datetime[i,2] <- sen$sec[i] + (sen$mnt[i])*60 + (sen$hou[i])*3600
       for (j in 1:sampling_rate) {
             dat_index <- (sampling_rate*(i-1)) + j
             if (is.na(dat$u[dat_index])==FALSE) {
