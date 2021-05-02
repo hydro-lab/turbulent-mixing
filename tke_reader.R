@@ -7,7 +7,7 @@ library(dplyr)
 library(ggplot2)
 
 setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/")
-fh <- "9MR-AB12" # filename header
+fh <- "lsc2May" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
 sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
 sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
@@ -124,25 +124,25 @@ for (i in 1:nrow(sen)) {
 
 par(mfrow = c(3,1), mar = c(6,6,3,3))
 # REM: x-axis is datetime range
-plot(datetime[,2], u_ave[,1], ylim = c(-0.5, 0.5), xlim = c(80900, 81100), type = "l",ylab = "u (m/s)", xlab = "")
-plot(datetime[,2], v_ave[,1], ylim = c(-0.5, 1), xlim = c(80900, 81100), type = "l",ylab = "v (m/s)", xlab = "")
-plot(datetime[,2], w_ave[,1], ylim = c(-1, 1), xlim = c(80900, 81100), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+plot(datetime[,2], u_ave[,1], ylim = c(-2, 2), xlim = c(56600, 57800), type = "l",ylab = "u (m/s)", xlab = "")
+plot(datetime[,2], v_ave[,1], ylim = c(-2, 2), xlim = c(56600, 57800), type = "l",ylab = "v (m/s)", xlab = "")
+plot(datetime[,2], w_ave[,1], ylim = c(-2, 2), xlim = c(56600, 57800), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
 
 # to zoom in on an area of interest, find indices:
-start <- which(datetime[,2]==71450)
+start <- which(datetime[,2]==((15*60+48)*60))
 stop <- which(datetime[,2]==72000)
 dt_zoom <- datetime[start:stop,2]
 u_ave_zoom <- u_ave[start:stop,1]
 
 par(mfrow = c(3,1), mar = c(4,4,2,2))
-plot(datetime[,2], uu, ylim = c(0, 0.2), xlim = c(80900, 81100), type = "l", ylab = "uu", xlab = "")
-plot(datetime[,2], vv, ylim = c(0, 1), xlim = c(80900, 81100), type = "l", ylab = "vv", xlab = "")
-plot(datetime[,2], ww, ylim = c(0, 1), xlim = c(80900, 81100), type = "l", ylab = "ww", xlab = "Time (s)")
+plot(datetime[,2], uu, ylim = c(0, 0.2), xlim = c(56880, 57000), type = "l", ylab = "uu", xlab = "")
+plot(datetime[,2], vv, ylim = c(0, 1), xlim = c(56880, 57000), type = "l", ylab = "vv", xlab = "")
+plot(datetime[,2], ww, ylim = c(0, 1), xlim = c(56880, 57000), type = "l", ylab = "ww", xlab = "Time (s)")
 
 par(mfrow = c(3,1), mar = c(4,4,2,2))
-plot(datetime[,2], uv, ylim = c(-0.3, 0.3), xlim = c(80900, 81100), type = "l", ylab = "uv", xlab = "")
-plot(datetime[,2], uw, ylim = c(-0.3, 0.3), xlim = c(80900, 81100), type = "l", ylab = "uw", xlab = "")
-plot(datetime[,2], vw, ylim = c(-0.3, 0.3), xlim = c(80900, 81100), type = "l", ylab = "vw", xlab = "Time (s)")
+plot(datetime[,2], uv, ylim = c(-0.3, 0.3), xlim = c(56880, 57000), type = "l", ylab = "uv", xlab = "")
+plot(datetime[,2], uw, ylim = c(-0.3, 0.3), xlim = c(56880, 57000), type = "l", ylab = "uw", xlab = "")
+plot(datetime[,2], vw, ylim = c(-0.3, 0.3), xlim = c(56880, 57000), type = "l", ylab = "vw", xlab = "Time (s)")
 
 # Spectra
 start <- match(77300,datetime[,2])

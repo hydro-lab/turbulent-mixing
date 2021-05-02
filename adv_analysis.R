@@ -8,7 +8,7 @@ library(dplyr)
 library(ggplot2)
 
 setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/")
-fh <- "chartiers1" # filename header
+fh <- "lsc2May" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
 sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
 sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
