@@ -16,7 +16,7 @@ Welty et al.,
 D \approx \sqrt{\overline{u^\prime u^\prime}} \times L
 \end{equation}
 
-Or, should we venture into the realm of defining the 
+Or, should we venture into the realm of defining the $\lbrack (\overline{u^2}) (\overline{u^\prime u^\prime}) (\overline{v^\prime v^\prime}) (\overline{w^\prime w^\prime}) \rbrack ^{\frac{1}{8}}$, or even more crazy, $\lbrack (\overline{u^2}) (\overline{u^\prime u^\prime}) (\overline{u^\prime v^\prime}) (\overline{v^\prime v^\prime}) (\overline{v^\prime w^\prime}) (\overline{w^\prime w^\prime}) (\overline{u^\prime w^\prime}) \rbrack ^{\frac{1}{14}}$
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
