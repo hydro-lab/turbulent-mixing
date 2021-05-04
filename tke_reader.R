@@ -129,8 +129,8 @@ plot(datetime[,2], v_ave[,1], ylim = c(-2, 2), xlim = c(56600, 57800), type = "l
 plot(datetime[,2], w_ave[,1], ylim = c(-2, 2), xlim = c(56600, 57800), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
 
 # to zoom in on an area of interest, find indices:
-start <- which(datetime[,2]==((15*60+48)*60))
-stop <- which(datetime[,2]==72000)
+start <- which(datetime[,2]==((15*60+48)*60)) # start time computation: 15:48
+stop <- which(datetime[,2]==((15*60+50)*60)) # end time computation: 15:50
 dt_zoom <- datetime[start:stop,2]
 u_ave_zoom <- u_ave[start:stop,1]
 

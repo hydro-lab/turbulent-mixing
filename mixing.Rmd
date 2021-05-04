@@ -1,0 +1,24 @@
+---
+title: "Turbulent Diffusion"
+author: "David Kahler"
+date: "03 May 2021"
+output: html_document
+header-includes: 
+      \usepackage{amsmath}
+      \usepackage{pdfpages}
+---
+
+# Notes:
+Kundu and Cohen, Fluid Mechanics  
+Welty et al.,  
+
+\begin{equation}
+D \approx \sqrt{\overline{u^\prime u^\prime}} \times L
+\end{equation}
+
+Or, should we venture into the realm of defining the 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
