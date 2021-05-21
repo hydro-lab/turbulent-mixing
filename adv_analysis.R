@@ -6,6 +6,7 @@
 #install.packages("ggplot2")
 library(dplyr)
 library(ggplot2)
+library(lubridate)
 
 setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/")
 fh <- "lsc2May" # filename header
@@ -28,6 +29,8 @@ sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6
 # 14   Temperature                      (degrees C)
 # 15   Analog input
 # 16   Checksum                         (1=failed)
+starttime <- as.Date(paste(sen$yea[1], sen$mon[1], sen$day[1], sep="-"), origin="1970-01-01") # NOT FINISHED!
+
 fn_dat <- paste(fh, "dat", sep = ".")
 dat <- read.table(fn_dat, header = FALSE, sep = "", dec = ".")
 # or
@@ -67,19 +70,6 @@ hist(dat$snr1, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim =
 hist(dat$snr2, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 2", xlab = "", main = "")
 hist(dat$snr3, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 3", xlab = "Signal-to-Noise Ratio (dB)", main = "")
 
-# IF TIMES ARE NEEDED
-# datetime <- array(-9999, dim = c(nrow(sen),2)) # col 1: days (day 1 is 01 Jan 2020), col 2: seconds of the day
-# # loops through each second of the record and records the second to the sen variable
-# for (i in 1:nrow(sen)) {
-#       # datetime[i,1] is the number of days since 31 Dec 2019, i.e., 01 Jan 2020 is day 1
-#       datetime[i,1] <- ( as.numeric(as.Date(paste(sen$yea[i], sen$mon[i], sen$day[i], sep = " "), format = "%Y %m %d")) - as.numeric(as.Date("2019 12 31", format = "%Y %m %d")) )
-#       # datetime[i,2] is the number of seconds of that day.  Still in UTC.
-#       datetime[i,2] <- sen$sec[i] + (sen$mnt[i])*60 + (sen$hou[i])*3600
-# }
-# sen$days <- datetime[,1]
-# sen$secs <- datetime[,2]
-# rm(datetime)
-
 # ANALYSIS BY AVERAGING WINDOW:
 # bar is the averaging window for U_bar and to compute the deviations from the mean, easiest to express 
 # as a multiple of the sampling rate, therefore measured in seconds: bar_s.  Can take non-integer values.
@@ -105,7 +95,7 @@ uv <- uu
 uw <- uu
 vw <- uu
 for (i in 1:(nrow(u))) {
-      time[i] <- dat$time[((i)*bar)] # enters end time
+      time[i] <- starttime + (i-1)*bar # this is the start time of the averaging window at time step, i
       for (j in 1:bar) { # this will cycle over each averaging window
             dat_index <- (bar*(i-1)) + j
             if (is.na(dat$u[dat_index])==FALSE) {
