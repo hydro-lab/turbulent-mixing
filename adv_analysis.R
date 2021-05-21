@@ -86,19 +86,19 @@ hist(dat$snr3, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim =
 bar_s <- 3 # averaging window in seconds
 bar <- round(bar_s * sampling_rate) # round needed to ensure that it fits within the dataset
 # gives decimal time for each data record
-dat$time <- (c(1:nrow(dat)))/sampling_rate
+dat$time <- (c(0:(nrow(dat)-1)))/sampling_rate
 
 u <- array(NA, dim = c(ceiling(nrow(dat)/bar),bar))
 v <- u
 w <- v
 time <- array(-9999, dim = c(nrow(u)))
-u_ave <- array(0, dim = c(nrow(sen),2))
-v_ave <- array(0, dim = c(nrow(sen),2))
-w_ave <- array(0, dim = c(nrow(sen),2))
+u_ave <- array(0, dim = c(nrow(u),2))
+v_ave <- u_ave
+w_ave <- u_ave
 u_prime <- u
 v_prime <- v
 w_prime <- w
-uu <- array(-9999, dim = c(nrow(sen),1))
+uu <- array(0, dim = c(nrow(u)))
 vv <- uu
 ww <- uu
 uv <- uu
@@ -106,7 +106,7 @@ uw <- uu
 vw <- uu
 for (i in 1:(nrow(u))) {
       time[i] <- dat$time[((i)*bar)] # enters end time
-      for (j in 1:(ncol(u))) { # this will cycle over each second and write the decimal second
+      for (j in 1:bar) { # this will cycle over each averaging window
             dat_index <- (bar*(i-1)) + j
             if (is.na(dat$u[dat_index])==FALSE) {
                   if (dat$checksum[dat_index]>0) {
@@ -123,28 +123,28 @@ for (i in 1:(nrow(u))) {
       u_ave[i,1] <- mean(u[i,], na.rm = TRUE)
       v_ave[i,1] <- mean(v[i,], na.rm = TRUE)
       w_ave[i,1] <- mean(w[i,], na.rm = TRUE)
-      if (u_ave[i,2]==sampling_rate) {
-            for (j in 1:sampling_rate) {
-                  u_prime[i,j] <- u[i,j] - u_ave[i,1]
-                  v_prime[i,j] <- v[i,j] - v_ave[i,1]
-                  w_prime[i,j] <- w[i,j] - w_ave[i,1]
-            }
+      for (j in 1:bar) {
+            u_prime[i,j] <- u[i,j] - u_ave[i,1]
+            v_prime[i,j] <- v[i,j] - v_ave[i,1]
+            w_prime[i,j] <- w[i,j] - w_ave[i,1]
       }
-      if (u_ave[i,2]==sampling_rate) {
-            uu[i,1] <- mean((u_prime[i,]^2))
-            vv[i,1] <- mean((v_prime[i,]^2))
-            ww[i,1] <- mean((w_prime[i,]^2))
-            uv[i,1] <- mean((u_prime[i,]*v_prime[i,]))
-            uw[i,1] <- mean((u_prime[i,]*w_prime[i,]))
-            vw[i,1] <- mean((v_prime[i,]*w_prime[i,]))
-      }
+      uu[i] <- mean((u_prime[i,]^2))
+      vv[i] <- mean((v_prime[i,]^2))
+      ww[i] <- mean((w_prime[i,]^2))
+      uv[i] <- mean((u_prime[i,]*v_prime[i,]))
+      uw[i] <- mean((u_prime[i,]*w_prime[i,]))
+      vw[i] <- mean((v_prime[i,]*w_prime[i,]))
 }
 
 par(mfrow = c(3,1), mar = c(6,6,3,3))
 # REM: x-axis is datetime range
-plot(datetime[,2], u_ave[,1], ylim = c(-0.5, 0.5), xlim = c(77250, 77500), type = "l",ylab = "u (m/s)", xlab = "")
-plot(datetime[,2], v_ave[,1], ylim = c(-0.5, 1), xlim = c(77250, 77500), type = "l",ylab = "v (m/s)", xlab = "")
-plot(datetime[,2], w_ave[,1], ylim = c(-1, 1), xlim = c(77250, 77500), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+plot(u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
+plot(v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
+plot(w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (not seconds...)")
+
+
+
+
 
 # to zoom in on an area of interest, find indices:
 start <- which(datetime[,2]==71450)
