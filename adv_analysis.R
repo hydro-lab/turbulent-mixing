@@ -4,11 +4,12 @@
 # to install the needed packages, run the following lines:
 #install.packages("dplyr")
 #install.packages("ggplot2")
+#install.packages("lubridate")
 library(dplyr)
 library(ggplot2)
 library(lubridate)
 
-setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/")
+setwd("/Users/alannabachtlin/Desktop/data/LSC")
 fh <- "lsc2May" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
 sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
@@ -29,7 +30,9 @@ sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6
 # 14   Temperature                      (degrees C)
 # 15   Analog input
 # 16   Checksum                         (1=failed)
-starttime <- as.Date(paste(sen$yea[1], sen$mon[1], sen$day[1], sep="-"), origin="1970-01-01") # NOT FINISHED!
+d <- 24*3600*as.numeric(as.Date(paste(sen$yea[1], sen$mon[1], sen$day[1], sep="-"), origin="1970-01-01")) # number of seconds that gives the day
+h <- sen$sec[1]+60*sen$mnt[1]+3600*sen$hou[1] # time in seconds
+starttime <- as_datetime(d + h) # lubridate datetime for the start of the data
 
 fn_dat <- paste(fh, "dat", sep = ".")
 dat <- read.table(fn_dat, header = FALSE, sep = "", dec = ".")
@@ -95,35 +98,35 @@ uv <- uu
 uw <- uu
 vw <- uu
 for (i in 1:(nrow(u))) {
-      time[i] <- starttime + (i-1)*bar # this is the start time of the averaging window at time step, i
-      for (j in 1:bar) { # this will cycle over each averaging window
-            dat_index <- (bar*(i-1)) + j
-            if (is.na(dat$u[dat_index])==FALSE) {
-                  if (dat$checksum[dat_index]>0) {
-                        print(paste0("error at ", dat$ensemble[dat_index]))
-                  }
-                  u[i,j] <- dat$u[dat_index] # organize data
-                  u_ave[i,2] = u_ave[i,2] + 1
-                  v[i,j] <- dat$v[dat_index]
-                  v_ave[i,2] = v_ave[i,2] + 1
-                  w[i,j] <- dat$w[dat_index]
-                  w_ave[i,2] = w_ave[i,2] + 1
-            }
+  time[i] <- starttime + (i-1)*bar # this is the start time of the averaging window at time step, i
+  for (j in 1:bar) { # this will cycle over each averaging window
+    dat_index <- (bar*(i-1)) + j
+    if (is.na(dat$u[dat_index])==FALSE) {
+      if (dat$checksum[dat_index]>0) {
+        print(paste0("error at ", dat$ensemble[dat_index]))
       }
-      u_ave[i,1] <- mean(u[i,], na.rm = TRUE)
-      v_ave[i,1] <- mean(v[i,], na.rm = TRUE)
-      w_ave[i,1] <- mean(w[i,], na.rm = TRUE)
-      for (j in 1:bar) {
-            u_prime[i,j] <- u[i,j] - u_ave[i,1]
-            v_prime[i,j] <- v[i,j] - v_ave[i,1]
-            w_prime[i,j] <- w[i,j] - w_ave[i,1]
-      }
-      uu[i] <- mean((u_prime[i,]^2))
-      vv[i] <- mean((v_prime[i,]^2))
-      ww[i] <- mean((w_prime[i,]^2))
-      uv[i] <- mean((u_prime[i,]*v_prime[i,]))
-      uw[i] <- mean((u_prime[i,]*w_prime[i,]))
-      vw[i] <- mean((v_prime[i,]*w_prime[i,]))
+      u[i,j] <- dat$u[dat_index] # organize data
+      u_ave[i,2] = u_ave[i,2] + 1
+      v[i,j] <- dat$v[dat_index]
+      v_ave[i,2] = v_ave[i,2] + 1
+      w[i,j] <- dat$w[dat_index]
+      w_ave[i,2] = w_ave[i,2] + 1
+    }
+  }
+  u_ave[i,1] <- mean(u[i,], na.rm = TRUE)
+  v_ave[i,1] <- mean(v[i,], na.rm = TRUE)
+  w_ave[i,1] <- mean(w[i,], na.rm = TRUE)
+  for (j in 1:bar) {
+    u_prime[i,j] <- u[i,j] - u_ave[i,1]
+    v_prime[i,j] <- v[i,j] - v_ave[i,1]
+    w_prime[i,j] <- w[i,j] - w_ave[i,1]
+  }
+  uu[i] <- mean((u_prime[i,]^2))
+  vv[i] <- mean((v_prime[i,]^2))
+  ww[i] <- mean((w_prime[i,]^2))
+  uv[i] <- mean((u_prime[i,]*v_prime[i,]))
+  uw[i] <- mean((u_prime[i,]*w_prime[i,]))
+  vw[i] <- mean((v_prime[i,]*w_prime[i,]))
 }
 
 par(mfrow = c(3,1), mar = c(6,6,3,3))
@@ -159,5 +162,3 @@ par(mfrow = c(3,1), mar = c(4,4,2,2))
 hist(uv[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "u'v'", xlab = "", main = "")
 hist(uw[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "u'w'", xlab = "", main = "")
 hist(vw[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "v'w'", xlab = "", main = "")
-
-
