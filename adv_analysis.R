@@ -9,8 +9,8 @@ library(dplyr)
 library(ggplot2)
 library(lubridate)
 
-setwd("/Users/alannabachtlin/Desktop/data/LSC")
-fh <- "lsc2May" # filename header
+setwd("c:/Users/duquesne/Documents/nortek/data")
+fh <- "528AR13" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
 sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
 sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
@@ -68,7 +68,7 @@ seconds <- nrow(sen)
 top_samples <- seconds*sampling_rate # this is the number of records that there would be if every second had all of the sampling rate's elements filled in, the value should not exceed this.
 numbers <- ((records<=top_samples)&&(records>(top_samples-(2*sampling_rate)))) # we allow twice the values to account for missing values at the first second and the last second.
 error_checksum <- max(dat$checksum) # If there are any errors recorded, this will be = 1
-par(mfrow = c(3,1), mar = c(6,6,3,3)) # mfrow=c(nrows, ncols), https://www.statmethods.net/advgraphs/layout.html
+par(mfrow = c(3,1), mar = c(4,4,1,1)) # mfrow=c(nrows, ncols), https://www.statmethods.net/advgraphs/layout.html
 hist(dat$snr1, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 1", xlab = "", main = "")
 hist(dat$snr2, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 2", xlab = "", main = "")
 hist(dat$snr3, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 3", xlab = "Signal-to-Noise Ratio (dB)", main = "")
@@ -76,7 +76,7 @@ hist(dat$snr3, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim =
 # ANALYSIS BY AVERAGING WINDOW:
 # bar is the averaging window for U_bar and to compute the deviations from the mean, easiest to express 
 # as a multiple of the sampling rate, therefore measured in seconds: bar_s.  Can take non-integer values.
-bar_s <- 3 # averaging window in seconds
+bar_s <- 15 # averaging window in seconds
 bar <- round(bar_s * sampling_rate) # round needed to ensure that it fits within the dataset
 # gives decimal time for each data record
 dat$time <- (c(0:(nrow(dat)-1)))/sampling_rate
@@ -129,7 +129,7 @@ for (i in 1:(nrow(u))) {
   vw[i] <- mean((v_prime[i,]*w_prime[i,]))
 }
 
-par(mfrow = c(3,1), mar = c(6,6,3,3))
+par(mfrow = c(3,1), mar = c(4,4,1,1))
 # REM: x-axis is datetime range
 plot(u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
 plot(v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
@@ -140,24 +140,24 @@ plot(w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (not 
 
 
 # to zoom in on an area of interest, find indices:
-start <- which(datetime[,2]==71450)
-stop <- which(datetime[,2]==72000)
+start <- which(datetime[,2]==55560)
+stop <- which(datetime[,2]==55680)
 dt_zoom <- datetime[start:stop,2]
 u_ave_zoom <- u_ave[start:stop,1]
 
-par(mfrow = c(3,1), mar = c(4,4,2,2))
-plot(datetime[,2], uu, ylim = c(0, 0.2), xlim = c(77250, 77500), type = "l", ylab = "uu", xlab = "")
-plot(datetime[,2], vv, ylim = c(0, 1), xlim = c(77250, 77500), type = "l", ylab = "vv", xlab = "")
-plot(datetime[,2], ww, ylim = c(0, 1), xlim = c(77250, 77500), type = "l", ylab = "ww", xlab = "Time (s)")
+par(mfrow = c(3,1), mar = c(4,4,1,1))
+plot(uu, ylim = c(0, 0.2), type = "l", ylab = "uu", xlab = "")
+plot(vv, ylim = c(0, 1), type = "l", ylab = "vv", xlab = "")
+plot(ww, ylim = c(0, 1), type = "l", ylab = "ww", xlab = "Time (s)")
 
-par(mfrow = c(3,1), mar = c(4,4,2,2))
-plot(datetime[,2], uv, ylim = c(-0.3, 0.3), xlim = c(77250, 77500), type = "l", ylab = "uv", xlab = "")
-plot(datetime[,2], uw, ylim = c(-0.3, 0.3), xlim = c(77250, 77500), type = "l", ylab = "uw", xlab = "")
-plot(datetime[,2], vw, ylim = c(-0.3, 0.3), xlim = c(77250, 77500), type = "l", ylab = "vw", xlab = "Time (s)")
+par(mfrow = c(3,1), mar = c(4,4,1,1))
+plot(uv, ylim = c(-0.3, 0.3), type = "l", ylab = "uv", xlab = "")
+plot(uw, ylim = c(-0.3, 0.3), type = "l", ylab = "uw", xlab = "")
+plot(vw, ylim = c(-0.3, 0.3), type = "l", ylab = "vw", xlab = "Time (s)")
 
 # Spectra
-start <- match(77300,datetime[,2])
-stop <- match(77340,datetime[,2])
+start <- match(55560,datetime[,2])
+stop <- match(55680,datetime[,2])
 par(mfrow = c(3,1), mar = c(4,4,2,2))
 hist(uv[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "u'v'", xlab = "", main = "")
 hist(uw[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "u'w'", xlab = "", main = "")
