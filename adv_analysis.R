@@ -9,8 +9,9 @@ library(dplyr)
 library(ggplot2)
 library(lubridate)
 
-setwd("c:/Users/duquesne/Documents/nortek/data")
-fh <- "528AR13" # filename header
+setwd("c:/Users/duquesne/Documents/nortek/data") # lab laptop
+setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/") # David's computer
+fh <- "528AR214" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
 sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
 sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
@@ -54,7 +55,7 @@ dat <- dat %>% rename(burst = V1, ensemble = V2, u = V3, v = V4, w = V5, amp1 = 
 # 12   Correlation (Beam1)              (%)
 # 13   Correlation (Beam2)              (%)
 # 14   Correlation (Beam3)              (%)
-# 15   Pressure                         (dbar)
+# 15   Pressure                         (dbar)        p_dbar
 # 16   Analog input 1
 # 17   Analog input 2
 # 18   Checksum                         (1=failed)
@@ -65,7 +66,7 @@ sampling_rate = 64 # Hz, verify sampling rate in .hdr file under User setup
 # Data check
 records <- nrow(dat)
 seconds <- nrow(sen)
-top_samples <- seconds*sampling_rate # this is the number of records that there would be if every second had all of the sampling rate's elements filled in, the value should not exceed this.
+top_samples <- seconds*sampling_rate # this is the number of records that there would be if every second had all of the sampling rate's elements filled in, the value (records) should not exceed this.
 numbers <- ((records<=top_samples)&&(records>(top_samples-(2*sampling_rate)))) # we allow twice the values to account for missing values at the first second and the last second.
 error_checksum <- max(dat$checksum) # If there are any errors recorded, this will be = 1
 par(mfrow = c(3,1), mar = c(4,4,1,1)) # mfrow=c(nrows, ncols), https://www.statmethods.net/advgraphs/layout.html
@@ -73,18 +74,39 @@ hist(dat$snr1, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim =
 hist(dat$snr2, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 2", xlab = "", main = "")
 hist(dat$snr3, breaks = c(-100,0,5,10,15,20,25,30,35,40,45,50,55,60,100), xlim = c(0,60), ylab = "Beam 3", xlab = "Signal-to-Noise Ratio (dB)", main = "")
 
-# ANALYSIS BY AVERAGING WINDOW:
 # bar is the averaging window for U_bar and to compute the deviations from the mean, easiest to express 
 # as a multiple of the sampling rate, therefore measured in seconds: bar_s.  Can take non-integer values.
-bar_s <- 15 # averaging window in seconds
-bar <- round(bar_s * sampling_rate) # round needed to ensure that it fits within the dataset
+bar_s <- 15 # averaging window in seconds.  Should evaluate range from depth/mean representative velocity to entire period
+bar <- round(bar_s * sampling_rate) # in indexed values [i], round() needed to ensure that it fits within the dataset
 # gives decimal time for each data record
-dat$time <- (c(0:(nrow(dat)-1)))/sampling_rate
+dat$time <- starttime + (c(0:(nrow(dat)-1)))/sampling_rate
 
+## Examine data:
+par(mfrow = c(1,1))
+plot(dat$time,(1e5*dat$p_dbar), type = "l",ylab = "Pressure (Pa)", xlab = "Time (s)")
+lines(c(min(dat$time),max(dat$time)),c(101325,101325)) # Places a line at what should be the surface of the water
+
+## Figure out an estimate of pressure:
+# temperature <- array(NA, dim = nrow(dat))
+# for (i in 1:nrow(dat)) {
+#       if (dat$p_dbar>45000) {
+#             temperature[i] <- # WE NEED TO PULL TEMP DATA FROM SEN...
+#       }
+# }
+atmos <- mean(1e5*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
+dat$depth <- -(1e5*dat$p_dbar - atmos)/(9.81*997)
+plot(dat$time,(dat$depth), type = "l",ylab = "Depth (m)", xlab = "Time (s)")
+
+par(mfrow = c(3,1), mar = c(4,4,1,1))
+plot(dat$time,dat$u, ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
+plot(dat$time,dat$v, ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
+plot(dat$time,dat$w, ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+
+# ANALYSIS BY AVERAGING WINDOW:
 u <- array(NA, dim = c(ceiling(nrow(dat)/bar),bar))
 v <- u
 w <- v
-time <- array(-9999, dim = c(nrow(u)))
+time <- array(-9999, dim = c(ceiling(nrow(dat)/bar))) # will identify the start of every averaged window.
 u_ave <- array(0, dim = c(nrow(u),2))
 v_ave <- u_ave
 w_ave <- u_ave
@@ -98,7 +120,7 @@ uv <- uu
 uw <- uu
 vw <- uu
 for (i in 1:(nrow(u))) {
-  time[i] <- starttime + (i-1)*bar # this is the start time of the averaging window at time step, i
+  time[i] <- dat$time[(bar*(i-1)) + 1] # this is the start time of the averaging window at time step, i
   for (j in 1:bar) { # this will cycle over each averaging window
     dat_index <- (bar*(i-1)) + j
     if (is.na(dat$u[dat_index])==FALSE) {
@@ -131,9 +153,9 @@ for (i in 1:(nrow(u))) {
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 # REM: x-axis is datetime range
-plot(u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
-plot(v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
-plot(w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (not seconds...)")
+plot(time,u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
+plot(time,v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
+plot(time,w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
 
 
 
