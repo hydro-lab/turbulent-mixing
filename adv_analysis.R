@@ -95,12 +95,12 @@ lines(c(min(dat$time),max(dat$time)),c(101325,101325)) # Places a line at what s
 # }
 atmos <- mean(1e5*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
 dat$depth <- -(1e5*dat$p_dbar - atmos)/(9.81*997)
-plot(dat$time,(dat$depth), type = "l",ylab = "Depth (m)", xlab = "Time (s)")
+plot(hms::as_hms(dat$time),(dat$depth), type = "l",ylab = "Depth (m)", xlab = "Time (s)")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
-plot(as.numeric(dat$time),dat$u, ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
-plot(dat$time,dat$v, ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
-plot(dat$time,dat$w, ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+plot(hms::as_hms(dat$time),dat$u, ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
+plot(hms::as_hms(dat$time),dat$v, ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
+plot(hms::as_hms(dat$time),dat$w, ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
 
 # ANALYSIS BY AVERAGING WINDOW:
 u <- array(NA, dim = c(ceiling(nrow(dat)/bar),bar))
