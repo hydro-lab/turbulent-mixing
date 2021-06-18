@@ -95,12 +95,12 @@ lines(c(min(dat$time),max(dat$time)),c(101325,101325)) # Places a line at what s
 # }
 atmos <- mean(1e5*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
 dat$depth <- -(1e5*dat$p_dbar - atmos)/(9.81*997)
-plot(hms::as_hms(dat$time),(dat$depth), type = "l",ylab = "Depth (m)", xlab = "Time (s)")
+plot(hms::as_hms(dat$time),(dat$depth), type = "l",ylab = "Depth (m)", xlab = "Time (s, from midnight)")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 plot(hms::as_hms(dat$time),dat$u, ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
 plot(hms::as_hms(dat$time),dat$v, ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
-plot(hms::as_hms(dat$time),dat$w, ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+plot(hms::as_hms(dat$time),dat$w, ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s, from midnight)")
 
 # ANALYSIS BY AVERAGING WINDOW:
 u <- array(NA, dim = c(ceiling(nrow(dat)/bar),bar))
@@ -153,24 +153,34 @@ for (i in 1:(nrow(u))) {
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 # REM: x-axis is datetime range
-plot(time,u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
-plot(time,v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
-plot(time,w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
-
-
-
-
+plot(hms::as_hms(time),u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
+plot(hms::as_hms(time),v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
+plot(hms::as_hms(time),w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
 
 # to zoom in on an area of interest, find indices:
-start <- which(datetime[,2]==55560)
-stop <- which(datetime[,2]==55680)
-dt_zoom <- datetime[start:stop,2]
-u_ave_zoom <- u_ave[start:stop,1]
+start <- as.numeric(ymd_hms("2021-05-28 16:57:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # End time, same format
+diff_s <- abs(time-start) # finds the difference between the time entries and start time (in case we don't hit it exactly)
+diff_e <- abs(time-end)
+m_s <- 10*bar_s # allocate variable for minimum finding.  larger than what will be found
+m_e <- m_s
+s <- NA
+e <- NA
+for (i in 1:(length(time))) {
+      if (diff_s[i] < m_s) {
+            m_s <- diff_s[i]
+            s <- i # index of start
+      }
+      if (diff_e[i] <= m_e) {
+            m_e <- diff_e[i]
+            e <- i # index of end
+      }
+}
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
-plot(uu, ylim = c(0, 0.2), type = "l", ylab = "uu", xlab = "")
-plot(vv, ylim = c(0, 1), type = "l", ylab = "vv", xlab = "")
-plot(ww, ylim = c(0, 1), type = "l", ylab = "ww", xlab = "Time (s)")
+plot(hms::as_hms(time[s:e]), uu[s:e], ylim = c(0, 1), type = "l", ylab = "uu", xlab = "")
+plot(hms::as_hms(time[s:e]), vv[s:e], ylim = c(0, 1), type = "l", ylab = "vv", xlab = "")
+plot(hms::as_hms(time[s:e]), ww[s:e], ylim = c(0, 1), type = "l", ylab = "ww", xlab = "Time (s)")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 plot(uv, ylim = c(-0.3, 0.3), type = "l", ylab = "uv", xlab = "")
@@ -178,9 +188,10 @@ plot(uw, ylim = c(-0.3, 0.3), type = "l", ylab = "uw", xlab = "")
 plot(vw, ylim = c(-0.3, 0.3), type = "l", ylab = "vw", xlab = "Time (s)")
 
 # Spectra
-start <- match(55560,datetime[,2])
-stop <- match(55680,datetime[,2])
 par(mfrow = c(3,1), mar = c(4,4,2,2))
 hist(uv[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "u'v'", xlab = "", main = "")
 hist(uw[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "u'w'", xlab = "", main = "")
 hist(vw[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "v'w'", xlab = "", main = "")
+
+
+
