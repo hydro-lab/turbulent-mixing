@@ -153,9 +153,9 @@ for (i in 1:(nrow(u))) {
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 # REM: x-axis is datetime range
-plot(hms::as_hms(time),u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
-plot(hms::as_hms(time),v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
-plot(hms::as_hms(time),w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time))),u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
 
 # to zoom in on an area of interest, find indices:
 start <- as.numeric(ymd_hms("2021-05-28 16:57:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
