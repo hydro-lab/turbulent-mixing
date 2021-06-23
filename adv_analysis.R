@@ -83,7 +83,7 @@ dat$time <- starttime + (c(0:(nrow(dat)-1)))/sampling_rate
 
 ## Examine data:
 par(mfrow = c(1,1))
-plot(dat$time,(1e5*dat$p_dbar), type = "l",ylab = "Pressure (Pa)", xlab = "Time (s)")
+plot(dat$time,(1e4*dat$p_dbar), type = "l",ylab = "Pressure (Pa)", xlab = "Time (s)")
 lines(c(min(dat$time),max(dat$time)),c(101325,101325)) # Places a line at what should be the surface of the water
 
 ## Figure out an estimate of pressure:
@@ -93,10 +93,10 @@ lines(c(min(dat$time),max(dat$time)),c(101325,101325)) # Places a line at what s
 #             temperature[i] <- # WE NEED TO PULL TEMP DATA FROM SEN...
 #       }
 # }
-atmos <- mean(1e5*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
-dat$depth <- -(1e5*dat$p_dbar - atmos)/(9.81*997)
+atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
+dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
 par(mfrow = c(1,1), mar = c(4,4,1,1))
-plot(hms::as_hms(as_datetime(as.numeric(dat$time))),(dat$depth), type = "l",ylab = "Depth (m)", xlab = "Time")
+plot(dat$time,dat$depth, type = "l",ylab = "Depth (m)", xlab = "Time")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 plot(hms::as_hms(dat$time),dat$u, ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
