@@ -157,9 +157,17 @@ plot(hms::as_hms(as_datetime(as.numeric(time))),u_ave[,1], ylim = c(-1, 1), type
 plot(hms::as_hms(as_datetime(as.numeric(time))),v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
 plot(hms::as_hms(as_datetime(as.numeric(time))),w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
 
+plot(hms::as_hms(as_datetime(as.numeric(time))),uu, ylim = c(0, 0.1), type = "l",ylab = "u (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),vv, ylim = c(0, 0.1), type = "l",ylab = "v (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),ww, ylim = c(0, 0.1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+
+plot(hms::as_hms(as_datetime(as.numeric(time))),uv, ylim = c(-0.1, 0.1), type = "l",ylab = "u (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = "l",ylab = "v (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+
 # to zoom in on an area of interest, find indices:
-start <- as.numeric(ymd_hms("2021-05-28 16:57:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
-end <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # End time, same format
+start <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 17:01:00")) # End time, same format
 diff_s <- abs(time-start) # finds the difference between the time entries and start time (in case we don't hit it exactly)
 diff_e <- abs(time-end)
 m_s <- 10*bar_s # allocate variable for minimum finding.  larger than what will be found
@@ -178,9 +186,9 @@ for (i in 1:(length(time))) {
 }
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
-plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), uu[s:e], ylim = c(0, 1), type = "l", ylab = "uu", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), vv[s:e], ylim = c(0, 1), type = "l", ylab = "vv", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), ww[s:e], ylim = c(0, 1), type = "l", ylab = "ww", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), uu[s:e], ylim = c(0, 0.01), type = "l", ylab = "uu", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), vv[s:e], ylim = c(0, 0.01), type = "l", ylab = "vv", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), ww[s:e], ylim = c(0, 0.01), type = "l", ylab = "ww", xlab = "Time (s)")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 plot(uv, ylim = c(-0.3, 0.3), type = "l", ylab = "uv", xlab = "")
