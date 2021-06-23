@@ -196,6 +196,34 @@ plot(uv, ylim = c(-0.3, 0.3), type = "l", ylab = "uv", xlab = "")
 plot(uw, ylim = c(-0.3, 0.3), type = "l", ylab = "uw", xlab = "")
 plot(vw, ylim = c(-0.3, 0.3), type = "l", ylab = "vw", xlab = "Time (s)")
 
+# ANALYSIS AT EACH DEPTH
+# Check 16:57 to 16:59
+start <- as.numeric(ymd_hms("2021-05-28 16:57:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
 # Spectra
 par(mfrow = c(3,1), mar = c(4,4,2,2))
 hist(uv[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "u'v'", xlab = "", main = "")
