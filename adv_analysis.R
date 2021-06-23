@@ -95,7 +95,8 @@ lines(c(min(dat$time),max(dat$time)),c(101325,101325)) # Places a line at what s
 # }
 atmos <- mean(1e5*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
 dat$depth <- -(1e5*dat$p_dbar - atmos)/(9.81*997)
-plot(hms::as_hms(dat$time),(dat$depth), type = "l",ylab = "Depth (m)", xlab = "Time (s, from midnight)")
+par(mfrow = c(1,1), mar = c(4,4,1,1))
+plot(hms::as_hms(as_datetime(as.numeric(dat$time))),(dat$depth), type = "l",ylab = "Depth (m)", xlab = "Time")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 plot(hms::as_hms(dat$time),dat$u, ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
@@ -153,17 +154,17 @@ for (i in 1:(nrow(u))) {
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 # REM: x-axis is datetime range
-plot(hms::as_hms(as_datetime(as.numeric(time))),u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time))),u_ave[,1], ylim = c(-0.2, 0.2), type = "l",ylab = "u (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),v_ave[,1], ylim = c(-0.2, 0.2), type = "l",ylab = "v (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),w_ave[,1], ylim = c(-0.2, 0.2), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
 
-plot(hms::as_hms(as_datetime(as.numeric(time))),uu, ylim = c(0, 0.1), type = "l",ylab = "u (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),vv, ylim = c(0, 0.1), type = "l",ylab = "v (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),ww, ylim = c(0, 0.1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time))),uu, ylim = c(0, 0.1), type = "l",ylab = "uu (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),vv, ylim = c(0, 0.1), type = "l",ylab = "vv (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),ww, ylim = c(0, 0.1), type = "l",ylab = "ww (m/s)", xlab = "Time (s)")
 
-plot(hms::as_hms(as_datetime(as.numeric(time))),uv, ylim = c(-0.1, 0.1), type = "l",ylab = "u (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = "l",ylab = "v (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time))),uv, ylim = c(-0.1, 0.1), type = "l",ylab = "uv (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = "l",ylab = "vw (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = "l",ylab = "vw (m/s)", xlab = "Time (s)")
 
 # to zoom in on an area of interest, find indices:
 start <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
