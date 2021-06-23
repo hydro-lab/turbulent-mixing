@@ -178,9 +178,9 @@ for (i in 1:(length(time))) {
 }
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
-plot(hms::as_hms(time[s:e]), uu[s:e], ylim = c(0, 1), type = "l", ylab = "uu", xlab = "")
-plot(hms::as_hms(time[s:e]), vv[s:e], ylim = c(0, 1), type = "l", ylab = "vv", xlab = "")
-plot(hms::as_hms(time[s:e]), ww[s:e], ylim = c(0, 1), type = "l", ylab = "ww", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), uu[s:e], ylim = c(0, 1), type = "l", ylab = "uu", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), vv[s:e], ylim = c(0, 1), type = "l", ylab = "vv", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), ww[s:e], ylim = c(0, 1), type = "l", ylab = "ww", xlab = "Time (s)")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 plot(uv, ylim = c(-0.3, 0.3), type = "l", ylab = "uv", xlab = "")
