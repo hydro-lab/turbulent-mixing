@@ -95,8 +95,9 @@ lines(c(min(dat$time),max(dat$time)),c(101325,101325)) # Places a line at what s
 # }
 atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
 dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
+# xlim = c(ymd_hms("2021-05-28 16:57:00",ymd_hms("2021-05-28 17:07"))), 
 par(mfrow = c(1,1), mar = c(4,4,1,1))
-plot(dat$time,dat$depth, type = "l",ylab = "Depth (m)", xlab = "Time")
+plot(dat$time,dat$depth, type = "l", ylim = c(-1,0), ylab = "Depth (m)", xlab = "Time")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 plot(hms::as_hms(dat$time),dat$u, ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
