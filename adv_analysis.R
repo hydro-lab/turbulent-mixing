@@ -10,7 +10,7 @@ library(ggplot2)
 library(lubridate)
 
 setwd("c:/Users/duquesne/Documents/nortek/data") # lab laptop
-setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/") # David's computer
+#setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/") # David's computer
 fh <- "528AR214" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
 sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
@@ -97,7 +97,7 @@ atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
 dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
 # xlim = c(ymd_hms("2021-05-28 16:57:00",ymd_hms("2021-05-28 17:07"))), 
 par(mfrow = c(1,1), mar = c(4,4,1,1))
-plot(dat$time,dat$depth, type = "l", ylim = c(-1,0), ylab = "Depth (m)", xlab = "Time")
+plot(dat$time,dat$depth, type = "l", ylim = c(-2.5,0), ylab = "Depth (m)", xlab = "Time")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 plot(hms::as_hms(dat$time),dat$u, ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
@@ -199,8 +199,8 @@ plot(vw, ylim = c(-0.3, 0.3), type = "l", ylab = "vw", xlab = "Time (s)")
 
 # ANALYSIS AT EACH DEPTH
 # Check 16:57 to 16:59
-start <- as.numeric(ymd_hms("2021-05-28 16:57:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
-end <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # End time, same format
+start <- as.numeric(ymd_hms("2021-05-28 17:19:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 17:21:00")) # End time, same format
 for (i in 1:nrow(dat)) {
       if (as.numeric(dat$time[i]) < start) {
             s <- i
@@ -224,6 +224,7 @@ uiuj[1,3] <- mean(ui*wi)
 uiuj[2,2] <- mean(vi^2)
 uiuj[2,3] <- mean(vi*wi)
 uiuj[3,3] <- mean(wi^2)
+U <- sqrt((u_ave^2) + (v_ave^2) + (w_ave^2)) #average velocity in all directions for time window
 
 # Spectra
 par(mfrow = c(3,1), mar = c(4,4,2,2))
