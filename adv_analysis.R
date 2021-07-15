@@ -40,7 +40,7 @@ dat <- read.table(fn_dat, header = FALSE, sep = "", dec = ".")
 # or
 # x <- file.choose()
 # dat <- read.table(x, header = FALSE, sep = "", dec = ".")
-dat <- dat %>% rename(burst = V1, ensemble = V2, u = V3, v = V4, w = V5, amp1 = V6, amp2 = V7, amp3 = V8, snr1 = V9, snr2 = V10, snr3 = V11, corr1 = V12, corr2 = V13, corr3 = V14, p_dbar = V15, a1 = V16, a2 = V17, checksum = V18)
+dat <- dat %>% rename(burst = V1, ensemble = V2, w = V3, u = V4, v = V5, amp1 = V6, amp2 = V7, amp3 = V8, snr1 = V9, snr2 = V10, snr3 = V11, corr1 = V12, corr2 = V13, corr3 = V14, p_dbar = V15, a1 = V16, a2 = V17, checksum = V18)#v3 changed from u to w, v4 was changed from v to u, v5 was changed from w to v so it can match how we placed it in the water
 # 1   Burst counter
 # 2   Ensemble counter                 (1-65536)
 # 3   Velocity (Beam1|X|East)          (m/s)
@@ -95,7 +95,7 @@ lines(c(min(dat$time),max(dat$time)),c(101325,101325)) # Places a line at what s
 # }
 atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
 dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
-# xlim = c(ymd_hms("2021-05-28 16:57:00",ymd_hms("2021-05-28 17:07"))), 
+#xlim = c(ymd_hms("2021-05-28 16:57:00",ymd_hms("2021-05-28 16:59:00")))
 par(mfrow = c(1,1), mar = c(4,4,1,1))
 plot(dat$time,dat$depth, type = "l", ylim = c(-2.5,0), ylab = "Depth (m)", xlab = "Time")
 
@@ -199,8 +199,8 @@ plot(vw, ylim = c(-0.3, 0.3), type = "l", ylab = "vw", xlab = "Time (s)")
 
 # ANALYSIS AT EACH DEPTH
 # Check 16:57 to 16:59
-start <- as.numeric(ymd_hms("2021-05-28 17:19:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
-end <- as.numeric(ymd_hms("2021-05-28 17:21:00")) # End time, same format
+start <- as.numeric(ymd_hms("2021-05-28 16:57:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # End time, same format
 for (i in 1:nrow(dat)) {
       if (as.numeric(dat$time[i]) < start) {
             s <- i
@@ -225,6 +225,7 @@ uiuj[2,2] <- mean(vi^2)
 uiuj[2,3] <- mean(vi*wi)
 uiuj[3,3] <- mean(wi^2)
 U <- sqrt((u_ave^2) + (v_ave^2) + (w_ave^2)) #average velocity in all directions for time window
+avgdepth <- mean(dat$depth[s:e]) #average depth for 2 minute time span
 
 # Spectra
 par(mfrow = c(3,1), mar = c(4,4,2,2))
