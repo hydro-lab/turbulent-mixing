@@ -18,6 +18,11 @@ D \approx \sqrt{\overline{u^\prime u^\prime}} \times L
 
 Or, should we venture into the realm of defining the $\lbrack (\overline{u^2}) (\overline{u^\prime u^\prime}) (\overline{v^\prime v^\prime}) (\overline{w^\prime w^\prime}) \rbrack ^{\frac{1}{8}}$, or even more crazy, $\lbrack (\overline{u^2}) (\overline{u^\prime u^\prime}) (\overline{u^\prime v^\prime}) (\overline{v^\prime v^\prime}) (\overline{v^\prime w^\prime}) (\overline{w^\prime w^\prime}) (\overline{u^\prime w^\prime}) \rbrack ^{\frac{1}{14}}$
 
+# Reynolds Stress Tensor
+\begin{equation}
+\sigma_{ij} = \rho_0 \begin{bmatrix} \overline{u^2} & \overline{uv} & \overline{uw}\\ \overline{vu} & \overline{v^2} & \overline{vw}\\ \overline{wu} & \overline{wv} & \overline{w^2} \end{bmatrix}
+\end{equation}
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
