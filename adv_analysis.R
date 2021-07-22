@@ -8,6 +8,7 @@
 library(dplyr)
 library(ggplot2)
 library(lubridate)
+library(latex2exp)
 
 setwd("c:/Users/duquesne/Documents/nortek/data") # lab laptop
 #setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/") # David's computer
@@ -199,8 +200,8 @@ plot(vw, ylim = c(-0.3, 0.3), type = "l", ylab = "vw", xlab = "Time (s)")
 
 # ANALYSIS AT EACH DEPTH
 # Check 16:57 to 16:59
-start <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
-end <- as.numeric(ymd_hms("2021-05-28 17:01:00")) # End time, same format
+start <- as.numeric(ymd_hms("2021-05-28 17:15:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 17:17:00")) # End time, same format
 for (i in 1:nrow(dat)) {
       if (as.numeric(dat$time[i]) < start) {
             s <- i
@@ -228,15 +229,16 @@ U <- sqrt((u_ave^2) + (v_ave^2) + (w_ave^2)) #average velocity in all directions
 avgdepth <- mean(dat$depth[s:e]) #average depth for 2 minute time span
 
 #create dataframes for ggplots
-df_wi_ui <- data.frame(wi, ui)
-df_wi_vi <- data.frame(wi, vi)
-df_ui_vi <- data.frame(ui, vi)
+ #direction of flow
+df <- data.frame(ui, vi, wi)
 
 #plots at each depth
-ggplot(df_wi_vi, aes(x= wi, y= vi)) +
+ggplot(df, aes(x= wi, y= vi)) +
   geom_point() +
-  xlab("wi") +
-  ylab("vi") +
+  xlim(-0.3, 0.3) +
+  ylim(-0.3, 0.3) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$'))+
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
