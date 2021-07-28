@@ -229,7 +229,6 @@ U <- sqrt((u_ave^2) + (v_ave^2) + (w_ave^2)) #average velocity in all directions
 avgdepth <- mean(dat$depth[s:e]) #average depth for 2 minute time span
 
 #create dataframes for ggplots
- #direction of flow
 df <- data.frame(ui, vi, wi)
 
 #plots at each depth
