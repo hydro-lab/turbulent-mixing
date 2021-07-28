@@ -12,7 +12,7 @@ library(latex2exp)
 
 setwd("c:/Users/duquesne/Documents/nortek/data") # lab laptop
 #setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/") # David's computer
-fh <- "528AR214" # filename header
+fh <- "629MON15" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
 sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
 sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
@@ -96,14 +96,14 @@ lines(c(min(dat$time),max(dat$time)),c(101325,101325)) # Places a line at what s
 # }
 atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
 dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
-#xlim = c(ymd_hms("2021-05-28 16:57:00",ymd_hms("2021-05-28 16:59:00")))
+#xlim = c(ymd_hms("2021-06-29 15:09:00",ymd_hms("2021-06-29 15:11:00")))
 par(mfrow = c(1,1), mar = c(4,4,1,1))
-plot(dat$time,dat$depth, type = "l", ylim = c(-2.5,0), ylab = "Depth (m)", xlab = "Time")
+plot(dat$time,dat$depth, type = "l", ylim = c(-6,0), ylab = "Depth (m)", xlab = "Time")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
-plot(hms::as_hms(dat$time),dat$u, ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
-plot(hms::as_hms(dat$time),dat$v, ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
-plot(hms::as_hms(dat$time),dat$w, ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s, from midnight)")
+plot(hms::as_hms(dat$time),dat$u, ylim = c(-5, 5), type = "l",ylab = "u (m/s)", xlab = "")
+plot(hms::as_hms(dat$time),dat$v, ylim = c(-5, 5), type = "l",ylab = "v (m/s)", xlab = "")
+plot(hms::as_hms(dat$time),dat$w, ylim = c(-5, 5), type = "l",ylab = "w (m/s)", xlab = "Time (s, from midnight)")
 
 # ANALYSIS BY AVERAGING WINDOW:
 u <- array(NA, dim = c(ceiling(nrow(dat)/bar),bar))
@@ -169,8 +169,8 @@ plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = 
 plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = "l",ylab = "vw (m/s)", xlab = "Time (s)")
 
 # to zoom in on an area of interest, find indices:
-start <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
-end <- as.numeric(ymd_hms("2021-05-28 17:01:00")) # End time, same format
+start <- as.numeric(ymd_hms("2021-06-29 15:09:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:11:00")) # End time, same format
 diff_s <- abs(time-start) # finds the difference between the time entries and start time (in case we don't hit it exactly)
 diff_e <- abs(time-end)
 m_s <- 10*bar_s # allocate variable for minimum finding.  larger than what will be found
@@ -200,8 +200,8 @@ plot(vw, ylim = c(-0.3, 0.3), type = "l", ylab = "vw", xlab = "Time (s)")
 
 # ANALYSIS AT EACH DEPTH
 # Check 16:57 to 16:59
-start <- as.numeric(ymd_hms("2021-05-28 17:15:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
-end <- as.numeric(ymd_hms("2021-05-28 17:17:00")) # End time, same format
+start <- as.numeric(ymd_hms("2021-06-29 15:47:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:49:00")) # End time, same format
 for (i in 1:nrow(dat)) {
       if (as.numeric(dat$time[i]) < start) {
             s <- i
@@ -234,14 +234,71 @@ df <- data.frame(ui, vi, wi)
 #plots at each depth
 ggplot(df, aes(x= wi, y= vi)) +
   geom_point() +
-  xlim(-0.3, 0.3) +
-  ylim(-0.3, 0.3) +
+  xlim(-3, 3) +
+  ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
   ylab(TeX('$v_i$'))+
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
   
+# depth and dissolved oxygen for Monongahela and Allegheny Rivers
+
+#629Mon
+#cable crossing
+file <- file.choose()
+cable_crossing_DO <- read.csv(file)
+cable_crossing_DO <- rename(cable_crossing_DO, time = ï..time) # This appears to be needed for Windows... 
+
+ggplot(cable_crossing_DO, aes(x = DO.mg.l. , y= Depth.m.))+
+  geom_point() +
+  labs(x = "DO (mg/l)", y = "Depth (m)") +
+  ggtitle("DO profile in Monongahela River") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1) +
+  theme(axis.text = element_text(face = "plain", size = 12))
+
+#birmingham bridge
+file <- file.choose()
+birmingham_bridge_DO <- read.csv(file)
+birmingham_bridge_DO <- rename(birmingham_bridge_DO, time =ï..time)
+
+ggplot(birmingham_bridge_DO, aes(x = DO.mg.l. , y= Depth.m.))+
+  geom_point() +
+  labs(x = "DO (mg/l)", y = "Depth (m)") +
+  ggtitle("DO profile in Monongahela River") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1) +
+  theme(axis.text = element_text(face = "plain", size = 12))
+
+#528AR
+#need to pull depth from 528AR13 before this one is finished 
+file <- file.choose()
+DO528AR13 <- read.csv(file)
+DO528AR13 <- rename(DO528AR13, time = ï..time) # This appears to be needed for Windows... 
+
+ggplot(DO528AR13, aes(x = DO.mg.l. , y= Depth.m.))+
+  geom_point() +
+  labs(x = "DO (mg/l)", y = "Depth (m)") +
+  ggtitle("DO profile in Allegheny River") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1) +
+  theme(axis.text = element_text(face = "plain", size = 12))
+
+#528AR214
+file <- file.choose()
+DO528AR214 <- read.csv(file)
+DO528AR214 <- rename(DO528AR214, time = ï..time) # This appears to be needed for Windows... 
+
+ggplot(DO528AR214, aes(x = DO.mg.l. , y= Depth.m.))+
+  geom_point() +
+  labs(x = "DO (mg/l)", y = "Depth (m)") +
+  ggtitle("DO profile in Allegheny River") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1) +
+  theme(axis.text = element_text(face = "plain", size = 12))
+
+
 # Spectra
 par(mfrow = c(3,1), mar = c(4,4,2,2))
 hist(uv[start:stop,1], breaks = c(-10000,-1.5,-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1.5,10000), xlim = c(-1.5,1.5), ylab = "u'v'", xlab = "", main = "")
