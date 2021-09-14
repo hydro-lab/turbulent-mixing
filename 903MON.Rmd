@@ -1,0 +1,1123 @@
+---
+title: "903MON"
+author: "Alanna Bachtlin"
+date: "9/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(latex2exp)
+library(gridExtra)
+library(grid)
+```
+
+```{r warning=FALSE}
+#height v velocity
+
+MON <- read.csv("C:\\Users\\duquesne\\Documents\\Alanna\\903MON.csv")
+MON <- rename(MON, Start.Time = ï..Start.Time)
+ggplot(MON, aes(x = U.m.s. , y= Height.m.))+
+  geom_point() +
+  labs(x = "Average Velocity (m/s)", y = "Height (m)") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(axis.text = element_text(face = "plain", size = 8)) 
+```
+
+```{r warning=FALSE}
+#stress tensors 
+#depth = 5.612286m
+#height = 0m
+
+setwd("C:\\Users\\duquesne\\Documents\\nortek\\data")
+fh <- "903MON17" # filename header
+fn_sen <- paste(fh, "sen", sep = ".")
+sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
+sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
+
+d <- 24*3600*as.numeric(as.Date(paste(sen$yea[1], sen$mon[1], sen$day[1], sep="-"), origin="1970-01-01")) # number of seconds that gives the day
+h <- sen$sec[1]+60*sen$mnt[1]+3600*sen$hou[1] # time in seconds
+starttime <- as_datetime(d + h) # lubridate datetime for the start of the data
+fn_dat <- paste(fh, "dat", sep = ".")
+dat <- read.table(fn_dat, header = FALSE, sep = "", dec = ".")
+dat <- dat %>% rename(burst = V1, ensemble = V2, w = V3, u = V4, v = V5, amp1 = V6, amp2 = V7, amp3 = V8, snr1 = V9, snr2 = V10, snr3 = V11, corr1 = V12, corr2 = V13, corr3 = V14, p_dbar = V15, a1 = V16, a2 = V17, checksum = V18)
+sampling_rate = 64
+bar_s <- 15 # averaging window in seconds.  Should evaluate range from depth/mean representative velocity to entire period
+bar <- round(bar_s * sampling_rate) # in indexed values [i], round() needed to ensure that it fits within the dataset
+# gives decimal time for each data record
+dat$time <- starttime + (c(0:(nrow(dat)-1)))/sampling_rate
+atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
+dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
+
+start <- as.numeric(ymd_hms("2021-09-03 19:10:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:11:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-15, 15) +
+  ylim(-16, 16) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 5.342638m
+#height = 0.269648m
+start <- as.numeric(ymd_hms("2021-09-03 19:12:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:13:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-15, 15) +
+  ylim(-15, 15) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 5.451464m 
+#height = 0.160822m
+start <- as.numeric(ymd_hms("2021-09-03 19:15:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:16:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-15, 15) +
+  ylim(-15, 15) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 5.298596m
+#height = 0.31369m
+
+start <- as.numeric(ymd_hms("2021-09-03 19:16:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:16:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-15, 15) +
+  ylim(-16, 16) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 5.107064m
+#height = 0.505222m
+start <- as.numeric(ymd_hms("2021-09-03 19:16:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:17:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-12, 12) +
+  ylim(-14, 14) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 5.21479m
+#height = 0.397496m
+start <- as.numeric(ymd_hms("2021-09-03 19:17:40")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:18:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-11, 11) +
+  ylim(-11, 11) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+
+#depth = 4.579936m
+#height = 1.03235m
+
+start <- as.numeric(ymd_hms("2021-09-03 19:19:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:19:50")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-10, 10) +
+  ylim(-10, 10) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 3.87677m
+#height = 1.735516m
+
+start <- as.numeric(ymd_hms("2021-09-03 19:20:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:20:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 3.821403m
+#height = 1.790883m
+start <- as.numeric(ymd_hms("2021-09-03 19:20:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:20:50")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+
+```{r warning=FALSE}
+#depth = 3.687097m
+#height = 1.925189m 
+start <- as.numeric(ymd_hms("2021-09-03 19:22:40")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:23:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 3.317996m
+#height = 2.29429m
+start <- as.numeric(ymd_hms("2021-09-03 19:23:50")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:24:10")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 3.330228m
+#height = 2.282058m
+start <- as.numeric(ymd_hms("2021-09-03 19:24:20")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:24:40")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 2.429001m
+#height = 3.183285m
+start <- as.numeric(ymd_hms("2021-09-03 19:26:40")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:27:20")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 1.791186m
+#height = 3.8211m
+start <- as.numeric(ymd_hms("2021-09-03 19:28:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:28:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 1.579186m
+#height = 4.0331m
+start <- as.numeric(ymd_hms("2021-09-03 19:29:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:29:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 1.538535m
+#height = 4.073751m
+start <- as.numeric(ymd_hms("2021-09-03 19:29:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:30:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 1.377077m
+#height = 4.235209m 
+start <- as.numeric(ymd_hms("2021-09-03 19:30:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:30:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 1.118206m
+#height = 4.49408m
+start <- as.numeric(ymd_hms("2021-09-03 19:30:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:31:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 1.04608m
+#height = 4.566206m
+start <- as.numeric(ymd_hms("2021-09-03 19:31:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:31:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+
+```{r warning=FALSE}
+#depth = 0.8285883m
+#height = 4.7836977m
+start <- as.numeric(ymd_hms("2021-09-03 19:32:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:32:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 0.5286565m
+#height = 5.0836295m
+start <- as.numeric(ymd_hms("2021-09-03 19:33:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:33:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 0.724079m
+#height = 4.888207m
+start <- as.numeric(ymd_hms("2021-09-03 19:33:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:34:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+
+```{r warning=FALSE}
+#depth = 0.6012995m
+#height = 5.0109865m
+start <- as.numeric(ymd_hms("2021-09-03 19:34:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:34:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 0.4915226m
+#height = 5.1207634m
+start <- as.numeric(ymd_hms("2021-09-03 19:34:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:35:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
+```{r warning=FALSE}
+#depth = 0.4353717m
+#height = 5.1769143m 
+start <- as.numeric(ymd_hms("2021-09-03 19:35:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:35:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df903MON <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+ggplot(df903MON, aes(x= wi, y= vi)) +
+  geom_point() +
+  xlim(-8, 8) +
+  ylim(-6, 6) +
+  xlab(TeX('$w_i$')) +
+  ylab(TeX('$v_i$')) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 12))
+```
