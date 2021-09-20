@@ -12,7 +12,7 @@ library(latex2exp)
 
 setwd("c:/Users/duquesne/Documents/nortek/data") # lab laptop
 #setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/") # David's computer
-fh <- "629MON15" # filename header
+fh <- "903MON17" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
 sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
 sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
@@ -64,6 +64,13 @@ dat <- dat %>% rename(burst = V1, ensemble = V2, w = V3, u = V4, v = V5, amp1 = 
 #vhd = read.table("MON103.vhd", header = FALSE, sep = "", dec = ".")
 sampling_rate = 64 # Hz, verify sampling rate in .hdr file under User setup
 
+#u_new and v_new loop
+x <- atan(0.18447139/0.3180326)
+for(i in 1:nrow(dat)) {
+  dat$u_new[i] <- dat$u[i] * cos(x) + dat$v[i] * sin(x)
+  dat$v_new[i] <- -dat$u[i] * sin(x) + dat$v[i] * cos(x)
+} 
+  
 # Data check
 records <- nrow(dat)
 seconds <- nrow(sen)
@@ -101,9 +108,9 @@ par(mfrow = c(1,1), mar = c(4,4,1,1))
 plot(dat$time,dat$depth, type = "l", ylim = c(-6,0), ylab = "Depth (m)", xlab = "Time")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
-plot(hms::as_hms(dat$time),dat$u, ylim = c(-5, 5), type = "l",ylab = "u (m/s)", xlab = "")
-plot(hms::as_hms(dat$time),dat$v, ylim = c(-5, 5), type = "l",ylab = "v (m/s)", xlab = "")
-plot(hms::as_hms(dat$time),dat$w, ylim = c(-5, 5), type = "l",ylab = "w (m/s)", xlab = "Time (s, from midnight)")
+plot(hms::as_hms(dat$time),dat$u, ylim = c(-10, 10), type = "l",ylab = "u (m/s)", xlab = "")
+plot(hms::as_hms(dat$time),dat$v, ylim = c(-10, 10), type = "l",ylab = "v (m/s)", xlab = "")
+plot(hms::as_hms(dat$time),dat$w, ylim = c(-10, 10), type = "l",ylab = "w (m/s)", xlab = "Time (s, from midnight)")
 
 # ANALYSIS BY AVERAGING WINDOW:
 u <- array(NA, dim = c(ceiling(nrow(dat)/bar),bar))
@@ -156,21 +163,21 @@ for (i in 1:(nrow(u))) {
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 # REM: x-axis is datetime range
-plot(hms::as_hms(as_datetime(as.numeric(time))),u_ave[,1], ylim = c(-0.2, 0.2), type = "l",ylab = "u (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),v_ave[,1], ylim = c(-0.2, 0.2), type = "l",ylab = "v (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),w_ave[,1], ylim = c(-0.2, 0.2), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time))),u_ave[,1], ylim = c(-1, 1), type = "l",ylab = "u (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),v_ave[,1], ylim = c(-1, 1), type = "l",ylab = "v (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),w_ave[,1], ylim = c(-1, 1), type = "l",ylab = "w (m/s)", xlab = "Time (s)")
 
-plot(hms::as_hms(as_datetime(as.numeric(time))),uu, ylim = c(0, 0.1), type = "l",ylab = "uu (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),vv, ylim = c(0, 0.1), type = "l",ylab = "vv (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),ww, ylim = c(0, 0.1), type = "l",ylab = "ww (m/s)", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time))),uu, ylim = c(-1, 1), type = "l",ylab = "uu (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),vv, ylim = c(-1, 1), type = "l",ylab = "vv (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),ww, ylim = c(-1, 1), type = "l",ylab = "ww (m/s)", xlab = "Time (s)")
 
-plot(hms::as_hms(as_datetime(as.numeric(time))),uv, ylim = c(-0.1, 0.1), type = "l",ylab = "uv (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = "l",ylab = "vw (m/s)", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-0.1, 0.1), type = "l",ylab = "vw (m/s)", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time))),uv, ylim = c(-1, 1), type = "l",ylab = "uv (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-1, 1), type = "l",ylab = "vw (m/s)", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time))),vw, ylim = c(-1, 1), type = "l",ylab = "vw (m/s)", xlab = "Time (s)")
 
 # to zoom in on an area of interest, find indices:
-start <- as.numeric(ymd_hms("2021-06-29 15:09:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
-end <- as.numeric(ymd_hms("2021-06-29 15:11:00")) # End time, same format
+start <- as.numeric(ymd_hms("2021-09-03 19:18:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:36:00")) # End time, same format
 diff_s <- abs(time-start) # finds the difference between the time entries and start time (in case we don't hit it exactly)
 diff_e <- abs(time-end)
 m_s <- 10*bar_s # allocate variable for minimum finding.  larger than what will be found
@@ -189,9 +196,9 @@ for (i in 1:(length(time))) {
 }
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
-plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), uu[s:e], ylim = c(0, 0.01), type = "l", ylab = "uu", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), vv[s:e], ylim = c(0, 0.01), type = "l", ylab = "vv", xlab = "")
-plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), ww[s:e], ylim = c(0, 0.01), type = "l", ylab = "ww", xlab = "Time (s)")
+plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), uu[s:e], ylim = c(0, 0.3), type = "l", ylab = "uu", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), vv[s:e], ylim = c(0, 0.4), type = "l", ylab = "vv", xlab = "")
+plot(hms::as_hms(as_datetime(as.numeric(time[s:e]))), ww[s:e], ylim = c(0, 0.6), type = "l", ylab = "ww", xlab = "Time (s)")
 
 par(mfrow = c(3,1), mar = c(4,4,1,1))
 plot(uv, ylim = c(-0.3, 0.3), type = "l", ylab = "uv", xlab = "")
@@ -200,8 +207,8 @@ plot(vw, ylim = c(-0.3, 0.3), type = "l", ylab = "vw", xlab = "Time (s)")
 
 # ANALYSIS AT EACH DEPTH
 # Check 16:57 to 16:59
-start <- as.numeric(ymd_hms("2021-06-29 15:47:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
-end <- as.numeric(ymd_hms("2021-06-29 15:49:00")) # End time, same format
+start <- as.numeric(ymd_hms("2021-09-03 19:10:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-09-03 19:35:30")) # End time, same format
 for (i in 1:nrow(dat)) {
       if (as.numeric(dat$time[i]) < start) {
             s <- i
