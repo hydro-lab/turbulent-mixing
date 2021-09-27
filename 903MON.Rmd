@@ -55,6 +55,13 @@ dat$time <- starttime + (c(0:(nrow(dat)-1)))/sampling_rate
 atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
 dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
 
+#u_new and v_new loop
+x <- atan(0.18447139/0.3180326)
+for(i in 1:nrow(dat)) {
+  dat$u_new[i] <- dat$u[i] * cos(x) + dat$v[i] * sin(x)
+  dat$v_new[i] <- -dat$u[i] * sin(x) + dat$v[i] * cos(x)
+}
+
 start <- as.numeric(ymd_hms("2021-09-03 19:10:30")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
 end <- as.numeric(ymd_hms("2021-09-03 19:11:30")) # End time, same format
 for (i in 1:nrow(dat)) {
@@ -67,11 +74,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -84,12 +91,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-15, 15) +
   ylim(-16, 16) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -110,11 +117,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -127,12 +134,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-15, 15) +
   ylim(-15, 15) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -153,11 +160,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -170,12 +177,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-15, 15) +
   ylim(-15, 15) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -197,11 +204,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -214,12 +221,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-15, 15) +
   ylim(-16, 16) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -239,11 +246,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -256,12 +263,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-12, 12) +
   ylim(-14, 14) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -281,11 +288,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -298,12 +305,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-11, 11) +
   ylim(-11, 11) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -326,11 +333,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -343,12 +350,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-10, 10) +
   ylim(-10, 10) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -369,11 +376,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -386,12 +393,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -412,11 +419,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -429,12 +436,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -456,11 +463,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -473,12 +480,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -499,11 +506,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -516,12 +523,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -542,11 +549,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -559,12 +566,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -584,11 +591,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -601,12 +608,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -626,11 +633,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -643,12 +650,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -668,11 +675,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -685,12 +692,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -711,11 +718,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -728,12 +735,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -753,11 +760,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -770,12 +777,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -796,11 +803,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -813,12 +820,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -839,11 +846,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -856,12 +863,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -883,11 +890,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -900,12 +907,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -925,11 +932,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -942,12 +949,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -967,11 +974,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -984,12 +991,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -1010,11 +1017,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -1027,12 +1034,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -1052,11 +1059,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -1069,12 +1076,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
@@ -1094,11 +1101,11 @@ for (i in 1:nrow(dat)) {
 }
 s <- s + 1
 e <- e + 1
-u_ave <- mean(dat$u[s:e])
-v_ave <- mean(dat$v[s:e])
+u_ave <- mean(dat$u_new[s:e])
+v_ave <- mean(dat$v_new[s:e])
 w_ave <- mean(dat$w[s:e])
-ui <- dat$u[s:e] - u_ave
-vi <- dat$v[s:e] - v_ave
+ui <- dat$u_new[s:e] - u_ave
+vi <- dat$v_new[s:e] - v_ave
 wi <- dat$w[s:e] - w_ave
 uiuj <- array(NA, dim = c(3,3))
 uiuj[1,1] <- mean(ui^2)
@@ -1111,12 +1118,12 @@ uiuj[3,3] <- mean(wi^2)
 df903MON <- data.frame(ui, vi, wi)#creates data frame
 
 #plots at each depth
-ggplot(df903MON, aes(x= wi, y= vi)) +
+ggplot(df903MON, aes(x= wi, y= ui)) +
   geom_point() +
   xlim(-8, 8) +
   ylim(-6, 6) +
   xlab(TeX('$w_i$')) +
-  ylab(TeX('$v_i$')) +
+  ylab(TeX('$u_i$')) +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(aspect.ratio = 1)+
   theme(axis.text = element_text(face = "plain", size = 12))
