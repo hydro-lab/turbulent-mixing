@@ -1,0 +1,680 @@
+---
+title: "Final Data Project"
+author: "Alanna Bachtlin"
+date: "7/29/2021"
+output: html_document
+header-includes:
+     \usepackage{amsmath}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(latex2exp)
+library(gridExtra)
+library(grid)
+```
+
+   Data was collected using an acoustic Doppler velocimeter and a dissolved oxygen logger. For each site, one along the Allegheny River and two along the Monongahela River, graphs of height vs dissolved oxygen and height vs velocity are shown. The Reynolds Stress Tensor graphs are also shown for four different depths. From this data collection, the boundary layer can be studied. 
+     
+Reynolds Stress Tensor Equation:
+
+\begin{equation}
+\sigma_{ij} = \rho_0 \begin{bmatrix} \overline{u^2} & \overline{uv} & \overline{uw}\\ \overline{vu} & \overline{v^2} & \overline{vw}\\ \overline{wu} & \overline{wv} & \overline{w^2} \end{bmatrix}
+\end{equation}
+
+Normal stresses are diagonal in the tensor and sheer stresses are off-diagonal. The turbulent fluctuations exert a stress on the flow. If the graph appears isotrophic, there is no directional preference and the average mean of the fluctuations is zero but if the graph appears anisotrophic there is a directional preference and the mean fluctuations are not zero. 
+
+
+
+
+```{r warning=FALSE, echo=FALSE}
+#Allegheny River
+
+#height vs DO
+DO528AR214 <- read.csv("C:\\Users\\duquesne\\Documents\\Alanna\\DO_528AR214.csv")
+DO528AR214 <- rename(DO528AR214, time = ï..time) # This appears to be needed for Windows... 
+
+p1 <- ggplot(DO528AR214, aes(x = DO.mg.l. , y= height.m.))+
+  geom_point() +
+  labs(x = "DO (mg/l)", y = "Height (m)") +
+  ggtitle("Dissolved Oxygen") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(axis.text = element_text(face = "plain", size = 8)) 
+  
+```
+
+```{r warning=FALSE, echo=FALSE}
+#height vs u
+p2 <- ggplot(DO528AR214, aes(x = U.m.s. , y= height.m.))+
+  geom_point() +
+  labs(x = "Average Velocity (m/s)", y = "Height (m)") +
+  ggtitle("Velocity") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(axis.text = element_text(face = "plain", size = 8)) 
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+#stress tensors 
+#Allegheny River goes from 16:57:00- 17:21:00 in 2 minute increments
+setwd("c:/Users/duquesne/Documents/nortek/data")
+fh <- "528AR214" # filename header
+fn_sen <- paste(fh, "sen", sep = ".")
+sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
+sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
+
+d <- 24*3600*as.numeric(as.Date(paste(sen$yea[1], sen$mon[1], sen$day[1], sep="-"), origin="1970-01-01")) # number of seconds that gives the day
+h <- sen$sec[1]+60*sen$mnt[1]+3600*sen$hou[1] # time in seconds
+starttime <- as_datetime(d + h) # lubridate datetime for the start of the data
+fn_dat <- paste(fh, "dat", sep = ".")
+dat <- read.table(fn_dat, header = FALSE, sep = "", dec = ".")
+dat <- dat %>% rename(burst = V1, ensemble = V2, w = V3, u = V4, v = V5, amp1 = V6, amp2 = V7, amp3 = V8, snr1 = V9, snr2 = V10, snr3 = V11, corr1 = V12, corr2 = V13, corr3 = V14, p_dbar = V15, a1 = V16, a2 = V17, checksum = V18)
+sampling_rate = 64
+bar_s <- 15 # averaging window in seconds.  Should evaluate range from depth/mean representative velocity to entire period
+bar <- round(bar_s * sampling_rate) # in indexed values [i], round() needed to ensure that it fits within the dataset
+# gives decimal time for each data record
+dat$time <- starttime + (c(0:(nrow(dat)-1)))/sampling_rate
+atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
+dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
+
+start <- as.numeric(ymd_hms("2021-05-28 16:57:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 16:59:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df528AR214 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p3 <- ggplot(df528AR214, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+  
+```
+
+```{r warning=FALSE, echo=FALSE}
+start <- as.numeric(ymd_hms("2021-05-28 17:03:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 17:05:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df528AR214 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p4 <- ggplot(df528AR214, aes(x= ui, y= wi)) +
+  geom_point() +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+```
+
+```{r warning=FALSE, echo=FALSE}
+start <- as.numeric(ymd_hms("2021-05-28 17:09:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 17:11:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df528AR214 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p5 <- ggplot(df528AR214, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+```
+
+```{r warning=FALSE, echo=FALSE}
+start <- as.numeric(ymd_hms("2021-05-28 17:15:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-05-28 17:17:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df528AR214 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p6 <- ggplot(df528AR214, aes(x= ui, y= wi)) +
+  geom_point() +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  xlim(-1, 1) +
+  ylim(-1, 1) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+```
+
+```{r warning=FALSE, echo=FALSE}
+grid.arrange(p1, p2, arrangeGrob(p3, p4, p5, p6, nrow=4, left = textGrob(TeX('$w_i$'), rot = 90, vjust = 1), bottom = textGrob(TeX('$u_i$'), vjust = 1)), nrow=1, top = "Allegheny River")
+```
+
+```{r warning=FALSE, echo=FALSE}
+#Monongahela River
+#cable crossing (CC)
+
+#height vs DO
+cable_crossing_DO <- read.csv("C:\\Users\\duquesne\\Documents\\Alanna\\DOcablecrossing629.csv")
+cable_crossing_DO <- rename(cable_crossing_DO, time = ï..time) # This appears to be needed for Windows... 
+
+p7 <- ggplot(cable_crossing_DO, aes(x = DO.mg.l. , y= height.m.))+
+  geom_point() +
+  labs(x = "DO (mg/l)", y = "Height(m)") +
+  ggtitle("Dissolved Oxygen") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(axis.text = element_text(face = "plain", size = 8))
+```
+
+```{r warning=FALSE, echo=FALSE}
+#height vs u
+p8 <- ggplot(cable_crossing_DO, aes(x = U.m.s. , y= height.m.))+
+  geom_point() +
+  labs(x = "Average Velocity (m/s)", y = "Height(m)") +
+  ggtitle("Velocity") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(axis.text = element_text(face = "plain", size = 8))
+```
+
+```{r warning=FALSE, echo=FALSE}
+#stress tensors
+#cable crossing goes from 15:09:00-15:23:00
+setwd("c:/Users/duquesne/Documents/nortek/data")
+fh <- "629MON15" # filename header
+fn_sen <- paste(fh, "sen", sep = ".")
+sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
+sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
+
+d <- 24*3600*as.numeric(as.Date(paste(sen$yea[1], sen$mon[1], sen$day[1], sep="-"), origin="1970-01-01")) # number of seconds that gives the day
+h <- sen$sec[1]+60*sen$mnt[1]+3600*sen$hou[1] # time in seconds
+starttime <- as_datetime(d + h) # lubridate datetime for the start of the data
+fn_dat <- paste(fh, "dat", sep = ".")
+dat <- read.table(fn_dat, header = FALSE, sep = "", dec = ".")
+dat <- dat %>% rename(burst = V1, ensemble = V2, w = V3, u = V4, v = V5, amp1 = V6, amp2 = V7, amp3 = V8, snr1 = V9, snr2 = V10, snr3 = V11, corr1 = V12, corr2 = V13, corr3 = V14, p_dbar = V15, a1 = V16, a2 = V17, checksum = V18)
+sampling_rate = 64
+bar_s <- 15 # averaging window in seconds.  Should evaluate range from depth/mean representative velocity to entire period
+bar <- round(bar_s * sampling_rate) # in indexed values [i], round() needed to ensure that it fits within the dataset
+# gives decimal time for each data record
+dat$time <- starttime + (c(0:(nrow(dat)-1)))/sampling_rate
+atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
+dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
+
+start <- as.numeric(ymd_hms("2021-06-29 15:09:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:11:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df629MON15 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p9 <- ggplot(df629MON15, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+start <- as.numeric(ymd_hms("2021-06-29 15:13:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:15:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df629MON15 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p10 <- ggplot(df629MON15, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+```
+
+```{r warning=FALSE, echo=FALSE}
+start <- as.numeric(ymd_hms("2021-06-29 15:17:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:18:20")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df629MON15 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p11 <- ggplot(df629MON15, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-1, 1) +
+  ylim(-1, 1) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+```
+
+```{r warning=FALSE, echo=FALSE}
+start <- as.numeric(ymd_hms("2021-06-29 15:21:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:22:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df629MON15 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p12 <- ggplot(df629MON15, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+grid.arrange(p7, p8, arrangeGrob(p9, p10, p11, p12, nrow=4, left = textGrob(TeX('$w_i$'), rot = 90, vjust = 1), bottom = textGrob(TeX('$u_i$'), vjust = 1)), nrow=1, top = "Monongahela River(cable crossing)")
+```
+
+   
+```{r warning=FALSE, echo=FALSE}
+#birmingham bridge (BB)
+#height vs DO
+birmingham_bridge_DO <- read.csv("C:\\Users\\duquesne\\Documents\\Alanna\\DOBirminghamBridge629.csv")
+birmingham_bridge_DO <- rename(birmingham_bridge_DO, time =ï..time)
+
+p13 <- ggplot(birmingham_bridge_DO, aes(x = DO.mg.l. , y= height.m.))+
+  geom_point() +
+  labs(x = "DO (mg/l)", y = "Height (m)") +
+  ggtitle("Dissolved Oxygen") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(axis.text = element_text(face = "plain", size = 8))
+```
+
+```{r warning=FALSE, echo=FALSE}
+#height vs u
+p14 <- ggplot(birmingham_bridge_DO, aes(x = U.m.s. , y= height.m.))+
+  geom_point() +
+  labs(x = "Average Velocity(m/s)", y = "Height (m)") +
+  ggtitle("Velocity") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(axis.text = element_text(face = "plain", size = 8))
+```
+
+```{r warning=FALSE, echo=FALSE}
+#stress tensors
+
+#birmingham bridge goes from 15:35:00-15:49:00
+setwd("c:/Users/duquesne/Documents/nortek/data")
+fh <- "629MON15" # filename header
+fn_sen <- paste(fh, "sen", sep = ".")
+sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
+sen <- sen %>% rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16)
+
+d <- 24*3600*as.numeric(as.Date(paste(sen$yea[1], sen$mon[1], sen$day[1], sep="-"), origin="1970-01-01")) # number of seconds that gives the day
+h <- sen$sec[1]+60*sen$mnt[1]+3600*sen$hou[1] # time in seconds
+starttime <- as_datetime(d + h) # lubridate datetime for the start of the data
+fn_dat <- paste(fh, "dat", sep = ".")
+dat <- read.table(fn_dat, header = FALSE, sep = "", dec = ".")
+dat <- dat %>% rename(burst = V1, ensemble = V2, w = V3, u = V4, v = V5, amp1 = V6, amp2 = V7, amp3 = V8, snr1 = V9, snr2 = V10, snr3 = V11, corr1 = V12, corr2 = V13, corr3 = V14, p_dbar = V15, a1 = V16, a2 = V17, checksum = V18)
+sampling_rate = 64
+bar_s <- 15 # averaging window in seconds.  Should evaluate range from depth/mean representative velocity to entire period
+bar <- round(bar_s * sampling_rate) # in indexed values [i], round() needed to ensure that it fits within the dataset
+# gives decimal time for each data record
+dat$time <- starttime + (c(0:(nrow(dat)-1)))/sampling_rate
+atmos <- mean(1e4*dat$p_dbar[1:10]) # Pa, to subtract atmospheric pressure
+dat$depth <- -(1e4*dat$p_dbar - atmos)/(9.81*997)
+
+start <- as.numeric(ymd_hms("2021-06-29 15:35:40")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:37:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df629MON15 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p15 <- ggplot(df629MON15, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+start <- as.numeric(ymd_hms("2021-06-29 15:39:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:41:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df629MON15 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p16 <- ggplot(df629MON15, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+start <- as.numeric(ymd_hms("2021-06-29 15:43:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:45:00")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df629MON15 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p17 <- ggplot(df629MON15, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+```
+
+```{r warning=FALSE, echo=FALSE}
+start <- as.numeric(ymd_hms("2021-06-29 15:47:00")) # Enter start time here as "YYYY-MM-DD HH:MM:SS" in 24-hour time
+end <- as.numeric(ymd_hms("2021-06-29 15:48:30")) # End time, same format
+for (i in 1:nrow(dat)) {
+      if (as.numeric(dat$time[i]) < start) {
+            s <- i
+      }
+      if (as.numeric(dat$time[i]) < end) {
+            e <- i
+      }
+}
+s <- s + 1
+e <- e + 1
+u_ave <- mean(dat$u[s:e])
+v_ave <- mean(dat$v[s:e])
+w_ave <- mean(dat$w[s:e])
+ui <- dat$u[s:e] - u_ave
+vi <- dat$v[s:e] - v_ave
+wi <- dat$w[s:e] - w_ave
+uiuj <- array(NA, dim = c(3,3))
+uiuj[1,1] <- mean(ui^2)
+uiuj[1,2] <- mean(ui*vi)
+uiuj[1,3] <- mean(ui*wi)
+uiuj[2,2] <- mean(vi^2)
+uiuj[2,3] <- mean(vi*wi)
+uiuj[3,3] <- mean(wi^2)
+
+df629MON15 <- data.frame(ui, vi, wi)#creates data frame
+
+#plots at each depth
+p18 <- ggplot(df629MON15, aes(x= ui, y= wi)) +
+  geom_point() +
+  xlim(-0.5, 0.5) +
+  ylim(-0.5, 0.5) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(aspect.ratio = 1)+
+  theme(axis.text = element_text(face = "plain", size = 4.5))
+```
+
+```{r warning=FALSE, echo=FALSE}
+grid.arrange(p13, p14, arrangeGrob(p15, p16, p17, p18, nrow=4, left = textGrob(TeX('$w_i$'), rot = 90, vjust = 1), bottom = textGrob(TeX('$u_i$'), vjust = 1)), nrow=1, top = "Monongahela River (Birmingham Bridge)")
+```
+
+
+    
