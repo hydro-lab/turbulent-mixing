@@ -2,6 +2,7 @@
 # code will take both the .sen file with time and .dat file with pressure to determine the depth and 
 # times.
 
+library(readr)
 library(dplyr)
 library(ggplot2)
 library(lubridate)
@@ -11,9 +12,9 @@ library(latex2exp)
 setwd("/Users/davidkahler/Documents/Hydrology_and_WRM/river_and_lake_mixing/ADV_data/") # David's computer
 fh <- "109MON18" # filename header
 fn_sen <- paste(fh, "sen", sep = ".")
-sen <- read.table(fn_sen, header = FALSE, sep = "", dec = ".")
+sen <- read_table(fn_sen, col_names = FALSE, col_types = "nnnnnnnnnnnnnnnn")
 sen <- sen %>%
-      rename(mon = V1, day = V2, yea = V3, hou = V4, mnt = V5, sec = V6, err = V7, sta = V8, bat = V9, ssp = V10, hed = V11, pit = V12, rol = V13, tmp = V14, a1 = V15, checksum = V16) %>%
+      rename(mon = X1, day = X2, yea = X3, hou = X4, mnt = X5, sec = X6, err = X7, sta = X8, bat = X9, ssp = X10, hed = X11, pit = X12, rol = X13, tmp = X14, a1 = X15, checksum = X16) %>%
       mutate(dt = ymd_hms(paste(yea,mon,day,hou,mnt,sec)))
 # 1   Month                            (1-12)
 # 2   Day                              (1-31)
@@ -31,16 +32,11 @@ sen <- sen %>%
 # 14   Temperature                      (degrees C)
 # 15   Analog input
 # 16   Checksum                         (1=failed)
-d <- 24*3600*as.numeric(as.Date(paste(sen$yea[1], sen$mon[1], sen$day[1], sep="-"), origin="1970-01-01")) # number of seconds that gives the day
-h <- sen$sec[1]+60*sen$mnt[1]+3600*sen$hou[1] # time in seconds
-starttime <- as_datetime(d + h) # lubridate datetime for the start of the data
 
 fn_dat <- paste(fh, "dat", sep = ".")
-dat <- read.table(fn_dat, header = FALSE, sep = "", dec = ".")
-# or
-# x <- file.choose()
-# dat <- read.table(x, header = FALSE, sep = "", dec = ".")
-dat <- dat %>% rename(burst = V1, ensemble = V2, w = V3, u = V4, v = V5, amp1 = V6, amp2 = V7, amp3 = V8, snr1 = V9, snr2 = V10, snr3 = V11, corr1 = V12, corr2 = V13, corr3 = V14, p_dbar = V15, a1 = V16, a2 = V17, checksum = V18)#v3 changed from u to w, v4 was changed from v to u, v5 was changed from w to v so it can match how we placed it in the water
+dat <- read_table(fn_dat, col_names = FALSE, col_types = "nnnnnnnnnnnnnnnnnn")
+dat <- dat %>%
+      rename(burst = V1, ensemble = V2, u = X3, v = X4, w = X5, amp1 = X6, amp2 = X7, amp3 = X8, snr1 = X9, snr2 = X10, snr3 = X11, corr1 = X12, corr2 = X13, corr3 = X14, p_dbar = X15, a1 = X16, a2 = X17, checksum = X18)
 # 1   Burst counter
 # 2   Ensemble counter                 (1-65536)
 # 3   Velocity (Beam1|X|East)          (m/s)
@@ -59,8 +55,6 @@ dat <- dat %>% rename(burst = V1, ensemble = V2, w = V3, u = V4, v = V5, amp1 = 
 # 16   Analog input 1
 # 17   Analog input 2
 # 18   Checksum                         (1=failed)
-#pck = read.table("MON103.pck", header = FALSE, sep = "", dec = ".")
-#vhd = read.table("MON103.vhd", header = FALSE, sep = "", dec = ".")
 sampling_rate = 64 # Hz, verify sampling rate in .hdr file under User setup
 
 # Data check
