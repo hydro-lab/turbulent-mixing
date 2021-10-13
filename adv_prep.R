@@ -34,7 +34,7 @@ sen <- sen %>%
 # 16   Checksum                         (1=failed)
 
 fn_dat <- paste(fh, "dat", sep = ".")
-dat <- read_table(fn_dat, col_names = FALSE, col_types = "nnnnnnnnnnnnnnnnnn")
+dat <- read_table(fn_dat, col_names = FALSE, col_types = "nndddnnnnnnnnnnnnn")
 dat <- dat %>%
       rename(burst = V1, ensemble = V2, u = X3, v = X4, w = X5, amp1 = X6, amp2 = X7, amp3 = X8, snr1 = X9, snr2 = X10, snr3 = X11, corr1 = X12, corr2 = X13, corr3 = X14, p_dbar = X15, a1 = X16, a2 = X17, checksum = X18)
 # 1   Burst counter
