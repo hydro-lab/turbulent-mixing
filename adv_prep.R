@@ -109,10 +109,20 @@ for (i in 1:dur) {
       for (j in 1:sampling_rate) {
             pressure[i,j] <- dat$p_Pa[((i-1)*sampling_rate+j)]
       }
-      pres[i] <- mean(pressure[i,])
-      temp[i] <- sen$tmp[i]
-      dnst[i] <- waterrho(temp[i])
+      pres[i] <- mean(pressure[i,])  # pressure (Pa)
+      temp[i] <- sen$tmp[i]          # temperature (C)
+      dnst[i] <- waterrho(temp[i])   # water density (kg/m^3)
       time[i] <- as.numeric(sen$dt[i]) - start
+}
+
+num <- 0                               # set index for breaks
+breaks <- array(0, dim = dur)          # preallocate a matrix to mark breaks
+for (i in 12:dur) {
+      ave_pres <- mean(pres[(i-11):(1-1)])
+      if ((pres[i] - pres[i-1]) > (10 * ave_pres)) {
+            num <- num + 1             # advance index
+            breaks[i] <- 1             # record break
+      }
 }
 
 loc <- data.frame(time,temp,pres,dnst) # time in seconds from start, temp in Celcius, pres in Pascals, dnst in N/m^3
